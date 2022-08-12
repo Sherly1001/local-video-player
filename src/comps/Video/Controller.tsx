@@ -26,6 +26,7 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
+  const ctrlRef = useRef<HTMLDivElement>(null)
   const clickRef = useRef<HTMLDivElement>(null)
 
   const [isFullscreen, setFullscreen] = useState(false)
@@ -165,14 +166,24 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
     }
   }
 
+  const clickGuard = (target: EventTarget, func: Function, ...args: any) => {
+    if (target == ctrlRef.current || target == clickRef.current) {
+      func(...args)
+    }
+  }
+
   return (
     <div
-      className={className + ' flex flex-col justify-end'}
-      onClick={(e) => e.target === clickRef.current && togglePlay()}
-      onDoubleClick={(e) => e.target === clickRef.current && toggleFullscreen()}
+      ref={ctrlRef}
+      className={className}
+      onClick={(e) => clickGuard(e.target, togglePlay)}
+      onDoubleClick={(e) => clickGuard(e.target, toggleFullscreen)}
       onWheel={(e) =>
-        e.target === clickRef.current &&
-        setVidVol(e.deltaY < 0 ? volume + 0.1 : volume - 0.1)
+        clickGuard(
+          e.target,
+          setVidVol,
+          e.deltaY < 0 ? volume + 0.1 : volume - 0.1
+        )
       }
       style={{
         userSelect: 'none',
@@ -184,58 +195,60 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       }}
       tabIndex={-1}
     >
-      <div ref={clickRef} className="flex-1"></div>
-      <div className="px-4">
-        <div className="flex pb-6 text-md">
-          <ProgressBar
-            className="flex-1"
-            value={time}
-            min={0}
-            max={duration}
-            onValueChange={setVidTime}
-            // onHover={console.log}
-          />
-          <div className="flex justify-center content-center w-20">
-            <span>
-              {new Date((duration - time) * 1000).toISOString().slice(11, 19)}
-            </span>
+      <div className="h-full w-full flex flex-col justify-end">
+        <div ref={clickRef} className="flex-1"></div>
+        <div className="px-4">
+          <div className="flex pb-6 text-md">
+            <ProgressBar
+              className="flex-1"
+              value={time}
+              min={0}
+              max={duration}
+              onValueChange={setVidTime}
+              // onHover={console.log}
+            />
+            <div className="flex justify-center content-center w-20">
+              <span>
+                {new Date((duration - time) * 1000).toISOString().slice(11, 19)}
+              </span>
+            </div>
+          </div>
+          <div className="flex xl:text-5xl lg:text-4xl md:text-3xl sm:text-xl">
+            <div className="flex flex-1">
+              {controllIcons.map((elm, idx) => (
+                <div
+                  key={idx}
+                  onClick={elm.onClick}
+                  className={
+                    'cursor-pointer hover:scale-125 transition ' +
+                    'flex flex-1 justify-center content-center'
+                  }
+                >
+                  <FontAwesomeIcon icon={elm.icon} />
+                </div>
+              ))}
+            </div>
+            <div className="flex w-3/5 items-center truncate px-14">
+              <span className="truncate text-2xl">{vidName}</span>
+            </div>
+            <div className="flex flex-1">
+              {settingIcons.map((elm, idx) => (
+                <div
+                  key={idx}
+                  onClick={elm.onClick}
+                  className={
+                    'cursor-pointer hover:scale-125 transition ' +
+                    'flex flex-1 justify-center content-center'
+                  }
+                >
+                  <FontAwesomeIcon icon={elm.icon} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex xl:text-5xl lg:text-4xl md:text-3xl sm:text-xl">
-          <div className="flex flex-1">
-            {controllIcons.map((elm, idx) => (
-              <div
-                key={idx}
-                onClick={elm.onClick}
-                className={
-                  'cursor-pointer hover:scale-125 transition ' +
-                  'flex flex-1 justify-center content-center'
-                }
-              >
-                <FontAwesomeIcon icon={elm.icon} />
-              </div>
-            ))}
-          </div>
-          <div className="flex w-3/5 items-center truncate px-14">
-            <span className="truncate text-2xl">{vidName}</span>
-          </div>
-          <div className="flex flex-1">
-            {settingIcons.map((elm, idx) => (
-              <div
-                key={idx}
-                onClick={elm.onClick}
-                className={
-                  'cursor-pointer hover:scale-125 transition ' +
-                  'flex flex-1 justify-center content-center'
-                }
-              >
-                <FontAwesomeIcon icon={elm.icon} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <div className="xl:h-10 lg:h-8 md:h-6 sm:h-4 h-2" />
       </div>
-      <div className="xl:h-10 lg:h-8 md:h-6 sm:h-4 h-2" />
     </div>
   )
 }
