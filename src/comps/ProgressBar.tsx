@@ -65,6 +65,9 @@ const ProgressBar = ({
   useEffect(() => {
     if (bar.current) {
       setBallWidth(bar.current.clientHeight * ballSize)
+      new ResizeObserver((e) => {
+        setBallWidth((e[0]?.target.clientHeight ?? 0) * ballSize)
+      }).observe(bar.current)
     }
   }, [bar.current?.clientHeight])
 
