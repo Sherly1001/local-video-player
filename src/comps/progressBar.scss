@@ -1,0 +1,22 @@
+.cust-bar {
+  height: 20%;
+  transition: 150ms;
+
+  .cust-ball {
+    top: 50%;
+    opacity: 0;
+    border-radius: 50%;
+    transition: opacity 150ms, transform 150ms;
+    transform: translate(-100%, -50%);
+  }
+
+  &:hover,
+  &.cust-dragging {
+    height: calc(100% / 3);
+
+    .cust-ball {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+}

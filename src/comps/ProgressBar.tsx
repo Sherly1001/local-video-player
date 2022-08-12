@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import './progressBar.scss'
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   value?: number
@@ -86,9 +87,16 @@ const ProgressBar = ({
         }}
       >
         <div
-          className="relative w-full h-1/5 hover:h-1/3 cursor-pointer"
-          onClick={(e) => setBallRatio(getBallRatio(e.clientX))}
+          className={
+            'cust-bar relative w-full cursor-pointer ' +
+            (dragging ? 'cust-dragging' : '')
+          }
+          onClick={(e) => {
+            if (e.button !== 0) return
+            setBallRatio(getBallRatio(e.clientX))
+          }}
           onMouseDown={(e) => {
+            if (e.button !== 0) return
             setDragging(true)
             setBallRatio(getBallRatio(e.clientX))
           }}
@@ -96,19 +104,16 @@ const ProgressBar = ({
             onHover && onHover(getBallRatio(e.clientX), e.clientX)
           }
         >
-          <div className="w-full h-full top-0 left-0 bg-zinc-400" />
+          <div className="cust-track w-full h-full top-0 left-0 bg-zinc-400" />
           <div
-            className="absolute h-full top-0 left-0 bg-red-600"
+            className="cust-prog absolute h-full top-0 left-0 bg-red-600"
             style={{
               width: ratio * 100 + '%',
             }}
           />
           <div
             ref={ball}
-            className={
-              'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 ' +
-              'rounded-full bg-red-600'
-            }
+            className={'cust-ball absolute bg-red-600'}
             style={{
               width: ballWidth + 'px',
               height: ballWidth + 'px',
