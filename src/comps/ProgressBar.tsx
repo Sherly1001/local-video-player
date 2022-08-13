@@ -12,7 +12,7 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
 
 const getRatio = (value: number, min: number, max: number) => {
   if (min == max) {
-    return 1
+    return 0
   }
   let r = (value - min) / (max - min)
   if (r < 0) r = 0
@@ -27,7 +27,7 @@ const getPos = (ratio: number, min: number, max: number) => {
 
 const ProgressBar = ({
   className,
-  value = 5,
+  value = 0,
   max = 5,
   min = 0,
   ballSize = 0.7,
@@ -51,7 +51,7 @@ const ProgressBar = ({
 
       return getRatio(clienX, posMin, posMax)
     }
-    return 1
+    return 0
   }
 
   const setBallRatio = (r: number) => {
