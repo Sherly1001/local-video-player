@@ -18,6 +18,7 @@ import {
 } from '../../custom'
 
 import ProgressBar from '../ProgressBar'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   realRef: React.RefObject<HTMLDivElement>
@@ -28,7 +29,10 @@ interface Props extends React.HTMLAttributes<HTMLDivElement> {
 const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   const ctrlRef = useRef<HTMLDivElement>(null)
   const clickRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
 
+  const [overlayIcon, setOverlayIcon] = useState<IconDefinition | null>(null)
+  const [overlayCache, setOverlayCache] = useState(0)
   const [isFullscreen, setFullscreen] = useState(false)
   const [paused, setPaused] = useState(false)
   const [muted, setMuted] = useState(false)
@@ -36,12 +40,26 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
 
+  const getVolIcon = (v: number) => {
+    if (v == 0 || muted) {
+      return faVolumeXmark
+    } else if (v < 1 / 3) {
+      return faVolumeLow
+    } else if (v < 2 / 3) {
+      return faVolume
+    } else {
+      return faVolumeHigh
+    }
+  }
+
   const togglePlay = (setPlay?: boolean) => {
     if (vidRef.current) {
       const nextState = setPlay ?? vidRef.current.paused
       const nextFunc = nextState
         ? vidRef.current.play.bind(vidRef.current)
         : vidRef.current.pause.bind(vidRef.current)
+      setOverlayCache(overlayCache + 1)
+      setOverlayIcon(nextState ? faPlay : faPause)
       setPaused(!nextState)
       nextFunc()
     }
@@ -60,6 +78,8 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   const seekVidTime = (t: number = 10) => {
     if (vidRef.current) {
       vidRef.current.currentTime += t
+      setOverlayCache(overlayCache + 1)
+      setOverlayIcon(t > 0 ? faClockRotateRight : faClockRotateLeft)
     }
   }
 
@@ -76,6 +96,8 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       if (v < 0) v = 0
       vidRef.current.volume = v
       setVolume(v)
+      setOverlayCache(overlayCache + 1)
+      setOverlayIcon(getVolIcon(v))
     }
   }
 
@@ -88,18 +110,6 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       if (!nextState && vidRef.current.volume == 0) {
         vidRef.current.volume = 0.1
       }
-    }
-  }
-
-  const getVolIcon = (v: number) => {
-    if (v == 0 || muted) {
-      return faVolumeXmark
-    } else if (v < 1 / 3) {
-      return faVolumeLow
-    } else if (v < 2 / 3) {
-      return faVolume
-    } else {
-      return faVolumeHigh
     }
   }
 
@@ -143,6 +153,31 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       }
     }
   }, [vidRef])
+
+  useEffect(() => {
+    if (overlayRef.current && overlayIcon) {
+      const overlay = overlayRef.current
+      overlay.style.display = 'block'
+      overlay
+        .animate(
+          [
+            { opacity: 0.8, transform: 'translate(-50%, -50%)' },
+            {
+              opacity: 0,
+              transform: 'translate(-50%, -50%) scale(2)',
+            },
+          ],
+          {
+            duration: 500,
+          }
+        )
+        .finished.then(() => {
+          overlay.style.display = 'none'
+          setOverlayCache(0)
+          setOverlayIcon(null)
+        })
+    }
+  }, [overlayIcon, overlayCache])
 
   document.onfullscreenchange = () => {
     setFullscreen(!!document.fullscreenElement)
@@ -195,6 +230,16 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       }}
       tabIndex={-1}
     >
+      <div
+        ref={overlayRef}
+        className={
+          'flex justify-center content-center p-5 text-4xl ' +
+          'absolute top-1/2 left-1/2 ' +
+          'rounded-full bg-zinc-800 hidden '
+        }
+      >
+        {overlayIcon && <FontAwesomeIcon icon={overlayIcon} />}
+      </div>
       <div className="h-full w-full flex flex-col justify-end">
         <div ref={clickRef} className="flex-1"></div>
         <div className="px-4">
