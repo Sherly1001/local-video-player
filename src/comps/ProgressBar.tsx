@@ -103,6 +103,9 @@ const ProgressBar = ({
           onMouseMove={(e) =>
             onHover && onHover(getBallRatio(e.clientX), e.clientX)
           }
+          onMouseLeave={() => {
+            onHover && onHover()
+          }}
         >
           <div className="cust-track w-full h-full top-0 left-0 bg-zinc-400" />
           <div

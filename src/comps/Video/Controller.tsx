@@ -30,12 +30,16 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   const ctrlRef = useRef<HTMLDivElement>(null)
   const clickRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
+  const progRef = useRef<HTMLDivElement>(null)
+  const preTimeRef = useRef<HTMLDivElement>(null)
 
   const [overlayIcon, setOverlayIcon] = useState<IconDefinition | null>(null)
   const [overlayCache, setOverlayCache] = useState(0)
   const [showCtrl, setShowCtrl] = useState(true)
   const [showTimeout, setShowTimeout] = useState(0)
   const [moving, setMoving] = useState(false)
+  const [preTime, setPreTime] = useState<number | null>(null)
+  const [prePos, setPrePos] = useState(0)
 
   const [isFullscreen, setFullscreen] = useState(false)
   const [paused, setPaused] = useState(false)
@@ -43,6 +47,32 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
+
+  const setPrePosGuard = (clientX: number) => {
+    if (progRef.current && preTimeRef.current) {
+      if (
+        clientX <
+        progRef.current.offsetLeft + preTimeRef.current.clientWidth / 2
+      ) {
+        clientX =
+          progRef.current.offsetLeft + preTimeRef.current.clientWidth / 2
+      }
+
+      if (
+        clientX >
+        progRef.current.offsetLeft +
+          progRef.current.clientWidth -
+          preTimeRef.current.clientWidth / 2
+      ) {
+        clientX =
+          progRef.current.offsetLeft +
+          progRef.current.clientWidth -
+          preTimeRef.current.clientWidth / 2
+      }
+
+      setPrePos(clientX)
+    }
+  }
 
   const getVolIcon = (v: number) => {
     if (v == 0 || muted) {
@@ -266,17 +296,42 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
           (showCtrl ? '' : 'hidden')
         }
       >
+        <div
+          ref={preTimeRef}
+          className={
+            'absolute bg-zinc-900 px-3 py-2 ' +
+            '-translate-x-1/2 opacity-80 rounded ' +
+            (preTime !== null ? '' : 'hidden')
+          }
+          style={{
+            left: prePos + 'px',
+            top: (progRef.current?.offsetTop ?? 0) - 40 + 'px',
+          }}
+        >
+          <span>
+            {new Date((preTime ?? 0) * 1000).toISOString().slice(11, 19)}
+          </span>
+        </div>
         <div ref={clickRef} className="flex-1"></div>
         <div className="px-4">
           <div className="flex pb-6 text-md">
-            <ProgressBar
-              className="flex-1"
-              value={time}
-              min={0}
-              max={duration}
-              onValueChange={setVidTime}
-              // onHover={console.log}
-            />
+            <div ref={progRef} className="flex-1">
+              <ProgressBar
+                className="w-full h-full"
+                value={time}
+                min={0}
+                max={duration}
+                onValueChange={setVidTime}
+                onHover={(ratio?: number, clientX?: number) => {
+                  if (ratio !== undefined && clientX !== undefined) {
+                    setPreTime(ratio * duration)
+                    setPrePosGuard(clientX)
+                  } else {
+                    setPreTime(null)
+                  }
+                }}
+              />
+            </div>
             <div className="flex justify-center content-center w-20">
               <span>
                 {new Date((duration - time) * 1000).toISOString().slice(11, 19)}
