@@ -33,6 +33,10 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
 
   const [overlayIcon, setOverlayIcon] = useState<IconDefinition | null>(null)
   const [overlayCache, setOverlayCache] = useState(0)
+  const [showCtrl, setShowCtrl] = useState(true)
+  const [showTimeout, setShowTimeout] = useState(0)
+  const [moving, setMoving] = useState(false)
+
   const [isFullscreen, setFullscreen] = useState(false)
   const [paused, setPaused] = useState(false)
   const [muted, setMuted] = useState(false)
@@ -61,6 +65,7 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       setOverlayCache(overlayCache + 1)
       setOverlayIcon(nextState ? faPlay : faPause)
       setPaused(!nextState)
+      setShowCtrl(!nextState)
       nextFunc()
     }
   }
@@ -179,6 +184,17 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
     }
   }, [overlayIcon, overlayCache])
 
+  useEffect(() => {
+    if (showCtrl && !moving) {
+      showTimeout && clearTimeout(showTimeout)
+      setShowTimeout(setTimeout(() => setShowCtrl(false), 3000))
+    }
+
+    if (moving) {
+      setTimeout(() => setMoving(false), 50)
+    }
+  }, [showCtrl, moving])
+
   document.onfullscreenchange = () => {
     setFullscreen(!!document.fullscreenElement)
   }
@@ -210,7 +226,7 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
   return (
     <div
       ref={ctrlRef}
-      className={className}
+      className={className + (showCtrl ? '' : ' cursor-none')}
       onClick={(e) => clickGuard(e.target, togglePlay)}
       onDoubleClick={(e) => clickGuard(e.target, toggleFullscreen)}
       onWheel={(e) =>
@@ -220,6 +236,10 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
           e.deltaY < 0 ? volume + 0.1 : volume - 0.1
         )
       }
+      onMouseMove={() => {
+        setMoving(true)
+        setShowCtrl(true)
+      }}
       style={{
         userSelect: 'none',
         msUserSelect: 'none',
@@ -240,7 +260,12 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
       >
         {overlayIcon && <FontAwesomeIcon icon={overlayIcon} />}
       </div>
-      <div className="h-full w-full flex flex-col justify-end">
+      <div
+        className={
+          'h-full w-full flex flex-col justify-end ' +
+          (showCtrl ? '' : 'hidden')
+        }
+      >
         <div ref={clickRef} className="flex-1"></div>
         <div className="px-4">
           <div className="flex pb-6 text-md">
