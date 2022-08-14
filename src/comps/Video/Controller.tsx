@@ -353,7 +353,7 @@ const Controller = ({ className, realRef, vidRef, vidName }: Props) => {
                 </div>
               ))}
             </div>
-            <div className="flex w-3/5 items-center truncate px-14">
+            <div className="flex w-3/5 justify-center items-center truncate px-14">
               <span className="truncate text-2xl">{vidName}</span>
             </div>
             <div className="flex flex-1">
